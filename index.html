@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>டியூஷன் சென்டர் மேலாண்மை</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Madurai:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Hind Madurai', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receipt-modal-content, #receipt-modal-content * {
+                visibility: visible;
+            }
+            #receipt-modal-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 10px;
+                box-shadow: none;
+                border: 1px solid #000;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col pb-20 md:pb-0">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-indigo-700 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2 rounded-xl">
+                    <i data-lucide="graduation-cap" class="w-6 h-6 text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight tracking-wide" id="header-center-name">டியூஷன் சென்டர் மேலாண்மை</h1>
+                    <p class="text-xs text-indigo-200">மாணவர் & கணக்கு பதிவேடு</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="exportData()" class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-medium flex items-center gap-1 shadow-sm transition">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Backup</span>
+                </button>
+                <label class="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-medium flex items-center gap-1 shadow-sm transition cursor-pointer">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Restore</span>
+                    <input type="file" id="import-file" class="hidden" accept=".json" onchange="importData(event)">
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col md:flex-row gap-6">
+
+        <!-- Sidebar Navigation (Desktop) -->
+        <nav class="hidden md:flex flex-col w-64 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 space-y-2 h-fit sticky top-24">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="tab-btn active flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition bg-indigo-50 text-indigo-700">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span>டாஷ்போர்டு</span>
+            </button>
+            <button onclick="switchTab('students')" id="nav-students" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50 transition">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span>மாணவர்கள் விவரம்</span>
+            </button>
+            <button onclick="switchTab('fees')" id="nav-fees" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50 transition">
+                <i data-lucide="credit-card" class="w-5 h-5"></i>
+                <span>கட்டணம் (Fees)</span>
+            </button>
+            <button onclick="switchTab('expenses')" id="nav-expenses" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50 transition">
+                <i data-lucide="wallet" class="w-5 h-5"></i>
+                <span>வரவு - செலவு</span>
+            </button>
+            <button onclick="switchTab('attendance')" id="nav-attendance" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50 transition">
+                <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                <span>வருகைப்பதிவு</span>
+            </button>
+            <button onclick="switchTab('settings')" id="nav-settings" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50 transition">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                <span>அமைப்புகள்</span>
+            </button>
+        </nav>
+
+        <!-- Main Content Screens -->
+        <main class="flex-1 w-full min-w-0">
+
+            <!-- 1. DASHBOARD TAB -->
+            <section id="tab-dashboard" class="space-y-6">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold" id="dash-greeting">வணக்கம்!</h2>
+                        <p class="text-indigo-100 text-sm mt-1">இன்று உங்கள் டியூஷன் சென்டர் கணக்கு விபரம்</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openAddStudentModal()" class="bg-white text-indigo-700 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm shadow hover:bg-indigo-50 transition flex items-center gap-1.5">
+                            <i data-lucide="user-plus" class="w-4 h-4"></i> + மாணவர் சேர்க்கை
+                        </button>
+                        <button onclick="openCollectFeeModal()" class="bg-indigo-800/80 border border-indigo-400/30 text-white px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm shadow hover:bg-indigo-900 transition flex items-center gap-1.5">
+                            <i data-lucide="circle-dollar-sign" class="w-4 h-4"></i> கட்டணம் பதிவு
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-slate-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider">மொத்த மாணவர்கள்</span>
+                            <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-2xl font-bold text-slate-800" id="stat-total-students">0</div>
+                            <span class="text-xs text-slate-400 mt-1 block">பதிவு செய்தவர்கள்</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-slate-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider">இந்த மாத கட்டணம்</span>
+                            <div class="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <i data-lucide="arrow-down-left" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-2xl font-bold text-emerald-600" id="stat-fees-collected">₹0</div>
+                            <span class="text-xs text-slate-400 mt-1 block" id="current-month-name">இந்த மாதம்</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-slate-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider">மாத செலவுகள்</span>
+                            <div class="p-2 bg-rose-50 text-rose-600 rounded-xl">
+                                <i data-lucide="arrow-up-right" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-2xl font-bold text-rose-600" id="stat-expenses">₹0</div>
+                            <span class="text-xs text-slate-400 mt-1 block">வாடகை, பொருள் போன்றவை</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-center text-slate-500">
+                            <span class="text-xs font-semibold uppercase tracking-wider">நிகர மீதம் (Net)</span>
+                            <div class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                                <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="text-2xl font-bold text-indigo-600" id="stat-net-balance">₹0</div>
+                            <span class="text-xs text-slate-400 mt-1 block">வரவு - செலவு</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions / Activities -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Recent Fees -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i data-lucide="receipt" class="w-4 h-4 text-emerald-600"></i> சமீபத்திய கட்டணங்கள்
+                            </h3>
+                            <button onclick="switchTab('fees')" class="text-xs font-medium text-indigo-600 hover:underline">முழு விபரம்</button>
+                        </div>
+                        <div class="divide-y divide-slate-100 max-h-60 overflow-y-auto" id="dash-recent-fees">
+                            <div class="text-center py-8 text-slate-400 text-sm">கட்டணப் பதிவுகள் எதுவும் இல்லை</div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Fees List -->
+                    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                <i data-lucide="clock" class="w-4 h-4 text-amber-500"></i> இந்த மாத கட்டணம் செலுத்தாதவர்கள்
+                            </h3>
+                            <button onclick="switchTab('fees')" class="text-xs font-medium text-indigo-600 hover:underline">பட்டியல்</button>
+                        </div>
+                        <div class="divide-y divide-slate-100 max-h-60 overflow-y-auto" id="dash-unpaid-students">
+                            <div class="text-center py-8 text-slate-400 text-sm">மாணவர்கள் யாரும் சேர்க்கப்படவில்லை</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. STUDENTS TAB -->
+            <section id="tab-students" class="space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">மாணவர்கள் பட்டியல்</h2>
+                        <p class="text-xs text-slate-500">மாணவர் சேர்க்கை மற்றும் தொலைபேசி விவரங்கள்</p>
+                    </div>
+                    <button onclick="openAddStudentModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> புதிய மாணவர் சேர்க்கை
+                    </button>
+                </div>
+
+                <!-- Search & Filters -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+                        <input type="text" id="student-search-input" onkeyup="renderStudents()" placeholder="மாணவர் பெயர் அல்லது போன் எண் தேட..." class="w-full pl-9 pr-4 py-2 rounded-xl text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    </div>
+                    <select id="student-filter-class" onchange="renderStudents()" class="px-3 py-2 rounded-xl text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-600">
+                        <option value="">அனைத்து வகுப்புகள்</option>
+                        <option value="1 to 5">1 - 5 ஆம் வகுப்பு</option>
+                        <option value="6th">6 ஆம் வகுப்பு</option>
+                        <option value="7th">7 ஆம் வகுப்பு</option>
+                        <option value="8th">8 ஆம் வகுப்பு</option>
+                        <option value="9th">9 ஆம் வகுப்பு</option>
+                        <option value="10th">10 ஆம் வகுப்பு</option>
+                        <option value="11th">11 ஆம் வகுப்பு</option>
+                        <option value="12th">12 ஆம் வகுப்பு</option>
+                        <option value="College / Other">கல்லூரி / இதர</option>
+                    </select>
+                </div>
+
+                <!-- Students Table / Cards -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                                    <th class="p-4">வ.எண்</th>
+                                    <th class="p-4">மாணவர் பெயர்</th>
+                                    <th class="p-4">வகுப்பு</th>
+                                    <th class="p-4">பெற்றோர் போன் எண்</th>
+                                    <th class="p-4">மாத கட்டணம்</th>
+                                    <th class="p-4 text-center">செயல்கள்</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-table-body" class="divide-y divide-slate-100 text-sm">
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-slate-400">மாணவர்கள் யாரும் பதிவு செய்யப்படவில்லை. "புதிய மாணவர் சேர்க்கை" கிளிக் செய்யவும்.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. FEES TAB -->
+            <section id="tab-fees" class="space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800">கட்டண வசூல் & ரசீதுகள்</h2>
+                        <p class="text-xs text-slate-500">மாதாந்திர கட்டணம் பதிவு செய்தல் & பிரிண்ட் ரசீது</p>
+                    </div>
+                    <button onclick="openCollectFeeModal()" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> கட்டணம் பதிவு செய்
+                    </button>
+                </div>
+
+                <!-- Month Selector Filter -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-slate-600">மாதம் தேர்வு:</span>
+                        <input type="month" id="fee-month-filter" onchange="renderFeesTable()" class="px-3 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div class="text-xs text-slate-500">
+                        வசூலான தொகை: <span id="fee-filtered-total" class="font-bold text-emerald-600 text-sm">₹0</span>
+                    </div>
+                </div>
+
+                <!-- Fees Table -->
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-xs font-semibold uppercase tracking-wider">
+                                    <th class="p-4">ரசீது எண்</th>
+                                    <th class="p-4">தேதி</th>
+                                    <th class="p-4">மாணவர் பெயர்</th>
+                                    <th class="p-4">வகுப்பு</th>
+                                    <th class="p-4">மாதம்</th>
+                                    <th class="p-4">தொகை</th>
+                                    <th class="p-4">பணம் செலுத்திய முறை</th>
+                                    <th class="p-4 text-center">ரசீது</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fee-table-body" class="divide-y divide-slate-100 text-sm">
+                                <tr>
+                                    <td colspan="8" class="p-8 text-center text-slate-400">கட்டணப் பதிவுகள் எதுவும் இல்லை.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. EXPENSES TAB -->
+            <section id="tab-expenses" class="space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h2 class="text-xl font-bol
